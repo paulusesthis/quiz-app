@@ -9,12 +9,16 @@ const counter = document.getElementById("counter");
 const scoreDisplay = document.getElementById("score");
 const quizBody = document.getElementById("quizBody");
 const progressBar = document.getElementById("progressBar");
+const reviewContainer = document.getElementById("reviewContainer");
+const reviewScreen = document.getElementById("reviewScreen");
+const prog = document.getElementById("prog");
 
 const labels = ["A", "B", "C", "D"];
 
 let currentQuestion = 0;
 let score = 0;
 let answered = false;
+let userAnswers = [];
 
 const questions = [
     {
@@ -155,6 +159,13 @@ function displayQuestion() {
             if (answered) return;
             answered = true;
 
+            userAnswers[currentQuestion] = {
+                question: questions[currentQuestion].question,
+                selected: option,
+                correct: questions[currentQuestion].answer,
+                isCorrect: option === questions[currentQuestion].answer
+            };
+
             buttons.forEach(({ button: btn }) => {
                 btn.disabled = true;
             });
@@ -215,8 +226,11 @@ nextBtn.addEventListener("click", () => {
 function restartQuiz() {
     score = 0;
     currentQuestion = 0;
+    userAnswers = [];
     scoreDisplay.textContent = score;
     completed.classList.add("hidden");
+    reviewScreen.classList.add("hidden");
+    prog.classList.remove("hidden");
     quizBody.classList.remove("hidden");
     displayQuestion();
 }
@@ -252,4 +266,34 @@ function updateNextBtn() {
 function updateCount() {
     counter.textContent = `${currentQuestion + 1} / ${questions.length}`;
     progressBar.style.width = `${(currentQuestion / questions.length) * 100}%`;
+}
+
+function reviewAns() {
+    completed.classList.add("hidden");
+    prog.classList.add("hidden");
+    reviewContainer.innerHTML = "";
+    reviewScreen.classList.remove("hidden");
+
+    userAnswers.forEach(user => {
+        const div = document.createElement("div");
+        div.className = "mb-4 p-4 rounded-xl border-[1.5px] " + (user.isCorrect ? "border-[#1D9E75] bg-[#E1F5EE]" : "border-[#D85A30] bg-[#FAECE7]");
+
+        const question = document.createElement("p");
+        question.className = "text-md font-medium mb-3 " + (user.isCorrect ? "text-[#085041]" : "text-[#4A1B0C]");
+        question.textContent = user.question;
+
+        const selected = document.createElement("p");
+        selected.textContent = "Your answer: " + user.selected;
+        selected.className = "text-sm mb-1 " + (user.isCorrect ? "text-[#085041]" : "text-[#4A1B0C]");
+
+        const correct = document.createElement("p");
+        correct.className = "text-sm text-[#085041]";
+        correct.textContent = "Correct answer: " + user.correct;
+
+        div.appendChild(question);
+        div.appendChild(selected);
+        if (!user.isCorrect) div.appendChild(correct);
+
+        reviewContainer.appendChild(div);
+    });
 }
