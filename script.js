@@ -8,6 +8,7 @@ const ansAlert = document.getElementById("unanswered");
 const counter = document.getElementById("counter");
 const scoreDisplay = document.getElementById("score");
 const quizBody = document.getElementById("quizBody");
+const progressBar = document.getElementById("progressBar");
 
 const labels = ["A", "B", "C", "D"];
 
@@ -203,6 +204,7 @@ nextBtn.addEventListener("click", () => {
     if (currentQuestion < questions.length) {
         displayQuestion();
     } else {
+        progressBar.style.width = "100%";
         quizBody.classList.add("hidden");
         scoreLabel.textContent = `${score}/${questions.length}`;
         percent.textContent = `${Math.round((score / questions.length) * 100)}%`;
@@ -249,4 +251,5 @@ function updateNextBtn() {
 
 function updateCount() {
     counter.textContent = `${currentQuestion + 1} / ${questions.length}`;
+    progressBar.style.width = `${(currentQuestion / questions.length) * 100}%`;
 }
