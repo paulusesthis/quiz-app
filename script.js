@@ -213,6 +213,7 @@ nextBtn.addEventListener("click", () => {
 function restartQuiz() {
     score = 0;
     currentQuestion = 0;
+    scoreDisplay.textContent = score;
     completed.classList.add("hidden");
     quizBody.classList.remove("hidden");
     displayQuestion();
