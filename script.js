@@ -15,10 +15,12 @@ const prog = document.getElementById("prog");
 
 const labels = ["A", "B", "C", "D"];
 
-let currentQuestion = 0;
-let score = 0;
+let currentQuestion = null;
+let score = Number(localStorage.getItem("userScore")) || 0;
 let answered = false;
 let userAnswers = [];
+
+scoreDisplay.textContent = score;
 
 const questions = [
     {
@@ -124,6 +126,9 @@ const questions = [
 ];
 
 function displayQuestion() {
+    const savedIndex = localStorage.getItem("questionIndex");
+    currentQuestion = savedIndex !== null ? Number(savedIndex) : 0;
+
     answered = false;
 
     questionHeader.innerHTML = "";
@@ -172,7 +177,10 @@ function displayQuestion() {
 
             if (option === questionElement.answer) {
                 score++;
+                localStorage.setItem("userScore", score);
+
                 scoreDisplay.textContent = score;
+
                 button.classList.add("border-[#1D9E75]", "bg-[#E1F5EE]", "text-[#085041]");
                 labelSpan.classList.remove("border-gray-300", "text-gray-400");
                 labelSpan.classList.add("border-[#1D9E75]", "bg-[#1D9E75]", "text-white");
@@ -211,12 +219,15 @@ nextBtn.addEventListener("click", () => {
     }
 
     currentQuestion++;
+    localStorage.setItem("questionIndex", currentQuestion);
 
     if (currentQuestion < questions.length) {
         displayQuestion();
     } else {
         progressBar.style.width = "100%";
         quizBody.classList.add("hidden");
+        localStorage.removeItem("questionIndex");
+        prog.classList.add("hidden");
         scoreLabel.textContent = `${score}/${questions.length}`;
         percent.textContent = `${Math.round((score / questions.length) * 100)}%`;
         completed.classList.remove("hidden");
@@ -227,6 +238,8 @@ function restartQuiz() {
     score = 0;
     currentQuestion = 0;
     userAnswers = [];
+    localStorage.removeItem("questionIndex");
+    localStorage.setItem("userScore", "0");
     scoreDisplay.textContent = score;
     completed.classList.add("hidden");
     reviewScreen.classList.add("hidden");
@@ -264,8 +277,8 @@ function updateNextBtn() {
 }
 
 function updateCount() {
-    counter.textContent = `${currentQuestion + 1} / ${questions.length}`;
-    progressBar.style.width = `${(currentQuestion / questions.length) * 100}%`;
+    counter.textContent = `${Number(currentQuestion) + 1} / ${questions.length}`;
+    progressBar.style.width = `${(Number(currentQuestion) / questions.length) * 100}%`;
 }
 
 function reviewAns() {
