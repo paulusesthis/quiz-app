@@ -1,4 +1,5 @@
 const nextBtn = document.getElementById("next");
+const prevBtn = document.getElementById("previous");
 const questionHeader = document.getElementById("questionHeader");
 const options = document.getElementById("options");
 const completed = document.getElementById("completed");
@@ -15,10 +16,10 @@ const prog = document.getElementById("prog");
 
 const labels = ["A", "B", "C", "D"];
 
-let currentQuestion = null;
+let currentQuestion = Number(localStorage.getItem("questionIndex")) || 0;
 let score = Number(localStorage.getItem("userScore")) || 0;
 let answered = false;
-let userAnswers = [];
+let userAnswers = JSON.parse(localStorage.getItem("userAnswers")) || [];
 
 scoreDisplay.textContent = score;
 
@@ -126,13 +127,18 @@ const questions = [
 ];
 
 function displayQuestion() {
-    const savedIndex = localStorage.getItem("questionIndex");
-    currentQuestion = savedIndex !== null ? Number(savedIndex) : 0;
-
     answered = false;
 
     questionHeader.innerHTML = "";
     options.innerHTML = "";
+
+    if (currentQuestion <= 0) {
+        prevBtn.classList.add("hidden");
+        nextBtn.classList.add("ml-auto");
+    } else {
+        prevBtn.classList.remove("hidden");
+        nextBtn.classList.remove("ml-auto");
+    }
 
     const questionElement = questions[currentQuestion];
 
@@ -160,6 +166,33 @@ function displayQuestion() {
         button.appendChild(textSpan);
         buttons.push({ button, labelSpan });
 
+        const saved = userAnswers[currentQuestion];
+        if (saved) {
+            answered = true;
+            button.disabled = true;
+
+            if (option === saved.selected) {
+                if (saved.isCorrect) {
+                    button.classList.add("border-[#1D9E75]", "bg-[#E1F5EE]", "text-[#085041]");
+                    labelSpan.classList.remove("border-gray-300", "text-gray-400");
+                    labelSpan.classList.add("border-[#1D9E75]", "bg-[#1D9E75]", "text-white");
+                    labelSpan.innerHTML = '<i class="fa-solid fa-check text-[10px]"></i>';
+                } else {
+                    button.classList.add("border-[#D85A30]", "bg-[#FAECE7]", "text-[#4A1B0C]");
+                    labelSpan.classList.remove("border-gray-300", "text-gray-400");
+                    labelSpan.classList.add("border-[#D85A30]", "bg-[#D85A30]", "text-white");
+                    labelSpan.innerHTML = '<i class="fa-solid fa-xmark text-[10px]"></i>';
+                }
+            }
+
+            if (!saved.isCorrect && option === saved.correct) {
+                button.classList.add("border-[#1D9E75]", "bg-[#E1F5EE]", "text-[#085041]");
+                labelSpan.classList.remove("border-gray-300", "text-gray-400");
+                labelSpan.classList.add("border-[#1D9E75]", "bg-[#1D9E75]", "text-white");
+                labelSpan.innerHTML = '<i class="fa-solid fa-check text-[10px]"></i>';
+            }
+        }
+
         button.addEventListener("click", () => {
             if (answered) return;
             answered = true;
@@ -171,6 +204,8 @@ function displayQuestion() {
                 isCorrect: option === questions[currentQuestion].answer
             };
 
+            localStorage.setItem("userAnswers", JSON.stringify(userAnswers));
+
             buttons.forEach(({ button: btn }) => {
                 btn.disabled = true;
             });
@@ -178,9 +213,7 @@ function displayQuestion() {
             if (option === questionElement.answer) {
                 score++;
                 localStorage.setItem("userScore", score);
-
                 scoreDisplay.textContent = score;
-
                 button.classList.add("border-[#1D9E75]", "bg-[#E1F5EE]", "text-[#085041]");
                 labelSpan.classList.remove("border-gray-300", "text-gray-400");
                 labelSpan.classList.add("border-[#1D9E75]", "bg-[#1D9E75]", "text-white");
@@ -234,11 +267,19 @@ nextBtn.addEventListener("click", () => {
     }
 });
 
+prevBtn.addEventListener("click", () => {
+    if (currentQuestion <= 0) return;
+    currentQuestion--;
+    localStorage.setItem("questionIndex", currentQuestion);
+    displayQuestion();
+});
+
 function restartQuiz() {
     score = 0;
     currentQuestion = 0;
     userAnswers = [];
     localStorage.removeItem("questionIndex");
+    localStorage.removeItem("userAnswers");
     localStorage.setItem("userScore", "0");
     scoreDisplay.textContent = score;
     completed.classList.add("hidden");
@@ -277,8 +318,8 @@ function updateNextBtn() {
 }
 
 function updateCount() {
-    counter.textContent = `${Number(currentQuestion) + 1} / ${questions.length}`;
-    progressBar.style.width = `${(Number(currentQuestion) / questions.length) * 100}%`;
+    counter.textContent = `${currentQuestion + 1} / ${questions.length}`;
+    progressBar.style.width = `${(currentQuestion / questions.length) * 100}%`;
 }
 
 function reviewAns() {
